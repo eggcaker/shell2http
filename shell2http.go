@@ -365,6 +365,18 @@ func setCGIEnv(cmd *exec.Cmd, req *http.Request, appConfig Config) {
 	if err != nil {
 		log.Printf("failed to parse remote address %s: %s", req.RemoteAddr, err)
 	}
+
+	body := ""
+	if req.Method == "POST" {
+		buf := new(strings.Builder)
+		_, err := io.Copy(buf, req.Body)
+		if err != nil {
+			log.Printf("failed to parse body buffer %s", req.Body)
+		}
+
+		body = buf.String()
+	}
+
 	CGIVars := [...]struct {
 		cgiName, value string
 	}{
@@ -373,6 +385,7 @@ func setCGIEnv(cmd *exec.Cmd, req *http.Request, appConfig Config) {
 		{"REMOTE_ADDR", remoteHost},
 		{"REMOTE_PORT", remotePort},
 		{"REQUEST_METHOD", req.Method},
+		{"REQUEST_BODY", body},
 		{"REQUEST_URI", req.RequestURI},
 		{"SCRIPT_NAME", req.URL.Path},
 		{"SERVER_NAME", appConfig.host},
